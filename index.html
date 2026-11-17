@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Java Próbateszt — Interaktív Gyakorló</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            cream: '#FAF6F0',
+            surface: '#FDFBF7',
+            sand: '#EFE8DC',
+            terracotta: '#D98A6C',
+            terracottaDark: '#B8694C',
+            sage: '#7FA087',
+            sageLight: '#EBF3ED',
+            sageDark: '#4D7056',
+            rose: '#D48C94',
+            roseLight: '#F9ECEE',
+            roseDark: '#9E4F58',
+            ochre: '#D9B36C',
+            ochreLight: '#FBF4E6',
+            ink: '#2D2A26',
+            muted: '#6B635B',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    /* Alap háttér finom, nonfiguratív dél-amerikai geometrikus textúrával */
+    body {
+      background-color: #FAF6F0;
+      color: #2D2A26;
+      background-image:
+        radial-gradient(circle at 12px 12px, rgba(217, 138, 108, 0.08) 2px, transparent 2px),
+        radial-gradient(circle at 36px 36px, rgba(127, 160, 135, 0.08) 2px, transparent 2px);
+      background-size: 48px 48px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Lépcsős azték (Xicalcoliuhqui) szegélyminta SVG-vel */
+    .aztec-divider {
+      height: 14px;
+      width: 100%;
+      background-repeat: repeat-x;
+      background-position: center;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='14' viewBox='0 0 64 14'%3E%3Cpath d='M0 12 H12 V4 H24 V8 H18 V12 H36 V2 H52 V12 H64' fill='none' stroke='%23D98A6C' stroke-width='1.6' stroke-opacity='0.55'/%3E%3Crect x='42' y='6' width='4' height='4' fill='%237FA087' fill-opacity='0.6'/%3E%3C/svg%3E");
+    }
+
+    .aztec-header-trim {
+      height: 8px;
+      width: 100%;
+      background-repeat: repeat-x;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='8' viewBox='0 0 32 8'%3E%3Cpolygon points='0,8 8,0 16,8 24,0 32,8' fill='none' stroke='%23D9B36C' stroke-width='1.5' stroke-opacity='0.75'/%3E%3C/svg%3E");
+    }
+
+    /* Kódblokkok mobilbarát görgetése */
+    pre.code-block {
+      background-color: #262320;
+      color: #F4EFE6;
+      border-radius: 0.75rem;
+      padding: 0.875rem 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8125rem;
+      line-height: 1.55;
+      overflow-x: auto;
+      border-left: 4px solid #D98A6C;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Kódkiegészítő input / select stílusok sötét kódblokkon belül */
+    .code-select, .code-input {
+      background-color: #38332E;
+      color: #F7D488;
+      border: 1.5px solid #D98A6C;
+      border-radius: 0.375rem;
+      padding: 0.2rem 0.45rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      outline: none;
+      transition: all 0.15s ease;
+    }
+
+    .code-select:focus, .code-input:focus {
+      border-color: #7FA087;
+      box-shadow: 0 0 0 2px rgba(127, 160, 135, 0.35);
+    }
+
+    .code-select.correct, .code-input.correct {
+      background-color: #243B2B;
+      border-color: #7FA087;
+      color: #B6E3C0;
+    }
+
+    .code-select.incorrect, .code-input.incorrect {
+      background-color: #422428;
+      border-color: #D48C94;
+      color: #F7B7BE;
+    }
+
+    /* Finom görgetősáv a fülekhez mobilon */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Kártya sarokdíszítés */
+    .aztec-card {
+      position: relative;
+      background-color: #FDFBF7;
+      border: 1px solid #E5DDD0;
+      border-radius: 1rem;
+      box-shadow: 0 4px 14px -4px rgba(45, 42, 38, 0.06);
+    }
+
+    .aztec-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 26px;
+      height: 26px;
+      border-top-right-radius: 1rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 26 26'%3E%3Cpath d='M6 0 H26 V20 H20 V6 H6 Z' fill='%23D98A6C' fill-opacity='0.18'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-terracotta/25">
+
+  <!-- Ragadós (sticky) fejléc -->
+  <header class="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-sand shadow-sm">
+    <div class="max-w-3xl mx-auto px-4 pt-3 pb-2">
+      <!-- Felső sor: Cím + Visszaállítás -->
+      <div class="flex items-center justify-between gap-2 mb-2">
+        <div class="flex items-center gap-2.5">
+          <!-- Nonfiguratív azték nap/geometrikus embléma -->
+          <div class="w-9 h-9 rounded-xl bg-terracotta/15 border border-terracotta/40 flex items-center justify-center shrink-0">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8694C" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <rect x="7" y="7" width="10" height="10" />
+              <line x1="12" y1="1" x2="12" y2="5" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="1" y1="12" x2="5" y2="12" />
+              <line x1="19" y1="12" x2="23" y2="12" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-base sm:text-lg font-bold tracking-tight text-ink leading-tight">
+              Java Próbateszt
+            </h1>
+            <p class="text-xs text-muted">Interaktív felkészítő • A-verzió</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <div id="scoreBadge" class="px-3 py-1.5 rounded-xl bg-ochreLight border border-ochre/50 text-xs font-semibold text-ink">
+            Pontszám: <span id="scoreValue">0</span> / <span id="answeredValue">0</span>
+          </div>
+          <button
+            onclick="openResetModal()"
+            class="min-h-[40px] px-3 py-1.5 rounded-xl bg-sand/80 hover:bg-sand active:scale-95 text-xs font-medium text-ink transition flex items-center gap-1"
+            title="Haladás törlése"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+            <span class="hidden sm:inline">Visszaállítás</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Haladási sáv -->
+      <div class="w-full h-1.5 bg-sand rounded-full overflow-hidden mb-2.5">
+        <div id="progressBar" class="h-full bg-gradient-to-r from-terracotta via-ochre to-sage transition-all duration-300" style="width: 0%"></div>
+      </div>
+
+      <!-- Navigációs fülek -->
+      <nav class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1" aria-label="Szekciók">
+        <button data-tab="all" onclick="setActiveTab('all')" class="tab-btn min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition bg-terracotta text-white shadow-sm">
+          Összes (43)
+        </button>
+        <button data-tab="mcq" onclick="setActiveTab('mcq')" class="tab-btn min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition bg-sand/70 text-ink hover:bg-sand">
+          Feleletválasztós (30)
+        </button>
+        <button data-tab="concepts" onclick="setActiveTab('concepts')" class="tab-btn min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition bg-sand/70 text-ink hover:bg-sand">
+          Fogalmak (8)
+        </button>
+        <button data-tab="coding" onclick="setActiveTab('coding')" class="tab-btn min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition bg-sand/70 text-ink hover:bg-sand">
+          Kódkiegészítés &amp; Hibakeresés (5)
+        </button>
+      </nav>
+    </div>
+    <div class="aztec-header-trim"></div>
+  </header>
+
+  <!-- Fő tartalmi terület -->
+  <main class="flex-1 max-w-3xl w-full mx-auto px-4 py-6 space-y-8">
+
+    <!-- Bevezető információs kártya -->
+    <section class="aztec-card p-4 sm:p-5 bg-gradient-to-br from-surface to-ochreLight/40">
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-lg bg-sage/20 border border-sage/40 flex items-center justify-center shrink-0 mt-0.5">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4D7056" stroke-width="2">
+            <polygon points="12 2 22 12 12 22 2 12 12 2" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        </div>
+        <div class="text-xs sm:text-sm text-muted leading-relaxed">
+          <p class="font-semibold text-ink mb-1">Hogyan működik a gyakorló?</p>
+          <p>
+            A teljes Java próbateszt magyar nyelvre ültetve: válassz a <strong>30 feleletválasztós</strong> kérdés opciói közül az azonnali visszajelzésért, teszteld a tudásod a <strong>fogalomkártyákkal</strong>, vagy oldd meg a II. rész programozási feladataiból készített <strong>kódkiegészítő és hibakereső</strong> gyakorlatokat.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- I. RÉSZ: FELELETVÁLASZTÓS KÉRDÉSEK -->
+    <section id="section-mcq" class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg sm:text-xl font-bold text-ink flex items-center gap-2">
+          <span class="inline-block w-2.5 h-2.5 rotate-45 bg-terracotta"></span>
+          I. Rész: Feleletválasztós kérdések (30 db)
+        </h2>
+        <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-terracotta/15 text-terracottaDark">3 pont / kérdés</span>
+      </div>
+      <div class="aztec-divider"></div>
+      <div id="mcq-container" class="space-y-5"></div>
+    </section>
+
+    <!-- II. RÉSZ: FOGALMAK ÉS ELMÉLETI KÉRDÉSEK -->
+    <section id="section-concepts" class="space-y-4 pt-2">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg sm:text-xl font-bold text-ink flex items-center gap-2">
+          <span class="inline-block w-2.5 h-2.5 rotate-45 bg-sage"></span>
+          II. Rész: Kulcsfogalmak és definíciók
+        </h2>
+        <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-sage/20 text-sageDark">Önellenőrzés</span>
+      </div>
+      <div class="aztec-divider"></div>
+      <div id="concepts-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+    </section>
+
+    <!-- III. RÉSZ: KÓDKIEGÉSZÍTÉS ÉS HIBAKERESÉS -->
+    <section id="section-coding" class="space-y-4 pt-2">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg sm:text-xl font-bold text-ink flex items-center gap-2">
+          <span class="inline-block w-2.5 h-2.5 rotate-45 bg-ochre"></span>
+          III. Rész: Kódkiegészítés és Hibakeresés
+        </h2>
+        <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-ochre/25 text-ink">Part II alapján</span>
+      </div>
+      <div class="aztec-divider"></div>
+      <div id="coding-container" class="space-y-6"></div>
+    </section>
+
+  </main>
+
+  <!-- Lábléc -->
+  <footer class="mt-12 border-t border-sand bg-surface/80 py-6 px-4 text-center text-xs text-muted">
+    <div class="max-w-3xl mx-auto space-y-2">
+      <div class="aztec-divider opacity-60"></div>
+      <p class="pt-2">Java Próbateszt Interaktív Gyakorló • Mobilra optimalizált tanulási segédlet</p>
+    </div>
+  </footer>
+
+  <!-- Egyedi megerősítő ablak (alert/confirm helyett) -->
+  <div id="resetModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-ink/45 backdrop-blur-xs p-4">
+    <div class="aztec-card max-w-sm w-full p-5 space-y-4 animate-[fadeIn_0.15s_ease-out]">
+      <h3 class="text-base font-bold text-ink">Haladás visszaállítása</h3>
+      <p class="text-sm text-muted">
+        Biztosan törölni szeretnéd az összes eddigi válaszodat és nullázni a pontszámot?
+      </p>
+      <div class="flex justify-end gap-2.5 pt-1">
+        <button onclick="closeResetModal()" class="min-h-[44px] px-4 py-2 rounded-xl bg-sand text-ink text-sm font-medium hover:bg-sand/80">
+          Mégse
+        </button>
+        <button onclick="confirmReset()" class="min-h-[44px] px-4 py-2 rounded-xl bg-rose text-white text-sm font-semibold hover:bg-roseDark">
+          Igen, visszaállítom
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. ADATBÁZIS: 30 FELELETVÁLASZTÓS KÉRDÉS (MAGYARUL, JAVÍTOTT KÓDDAL)
+    // =========================================================================
+    const mcqQuestions = [
+      {
+        id: 1,
+        question: "Az objektumorientált programozási nyelvek melyik jellemzője korlátozza a viselkedést úgy, hogy egy objektum csak az osztályában definiált műveleteket hajthassa végre?",
+        code: null,
+        options: [
+          "Dinamikus kötés (Dynamic Binding)",
+          "Polimorfizmus (Polymorphism)",
+          "Öröklődés (Inheritance)",
+          "Egységbezárás (Encapsulation)"
+        ],
+        correctIndex: 3,
+        explanation: "Az egységbezárás (encapsulation) összefogja az adatokat és a rajtuk végezhető metódusokat egy osztályba, valamint szabályozza a hozzáférést."
+      },
+      {
+        id: 2,
+        question: "Mi lesz az S String értéke a következő utasítás lefutása után?",
+        code: `String S = (new String("arach")).substring(0, 2) +
+           (new String("nophobia")).substring(3);`,
+        options: [
+          "\"arachobia\"",
+          "\"arnophobia\"",
+          "\"arhobia\"",
+          "\"rachobia\""
+        ],
+        correctIndex: 2,
+        explanation: "Az \"arach\".substring(0, 2) az első két karaktert adja (\"ar\"), a \"nophobia\".substring(3) pedig a 3. indextől a végéig vág (\"hobia\"). Összefűzve: \"arhobia\"."
+      },
+      {
+        id: 3,
+        question: "Mikor érdemes privát (private) konstruktort használni egy osztályban?",
+        code: null,
+        options: [
+          "Amikor meguntuk a public kulcsszó használatát",
+          "Ha meg akarjuk akadályozni, hogy az osztályt kívülről példányosítsák",
+          "Ha meg akarjuk védeni az osztály tagváltozóit a külső módosítástól",
+          "Soha, mert a Java nyelvben nem megengedett a privát konstruktor"
+        ],
+        correctIndex: 1,
+        explanation: "Privát konstruktort akkor használunk (pl. Singleton mintánál vagy segédosztályoknál), ha nem engedjük meg a külső példányosítást a new operátorral."
+      },
+      {
+        id: 4,
+        question: "Melyik állítás igaz a RuntimeException osztályra és annak alosztályaira?",
+        code: null,
+        options: [
+          "Ha egy metódus RuntimeException-t dob, a try/catch blokk használata opcionális.",
+          "A FileIOException osztály a RuntimeException alosztálya.",
+          "Általánosságban a RuntimeException kezelését fordítási időben kell elvégezni.",
+          "Általánosságban a RuntimeException kivételt kötelező try/catch blokkal elkapni."
+        ],
+        correctIndex: 0,
+        explanation: "A RuntimeException és leszármazottai nem ellenőrzött (unchecked) kivételek, ezért nem kötelező őket sem elkapni, sem throws-szal deklarálni."
+      },
+      {
+        id: 5,
+        question: "Az alábbi típusok közül melyik NEM használható egy switch utasítás paramétereként?",
+        code: null,
+        options: [
+          "char",
+          "boolean",
+          "byte",
+          "int"
+        ],
+        correctIndex: 1,
+        explanation: "A Java switch utasítása nem fogad el logikai (boolean) kifejezést; csak egész típusokat (byte, short, char, int), enumot és Stringet támogat."
+      },
+      {
+        id: 6,
+        question: "Mi lesz a kimenet, amikor megpróbálod lefordítani és futtatni a következő kódot?",
+        code: `public class Switch {
+    public static void main(String[] args) {
+        int i = 1;
+        switch (i) {
+            case 0:
+                int j = 0;
+                System.out.print(j);
+            case 1:
+                int j = 1;
+                System.out.print(j);
+            case 2:
+                int j = 2;
+                System.out.print(j);
+            default:
+                int j = -1;
+                System.out.print(j);
+        }
+    }
+}`,
+        options: [
+          "12-1",
+          "1",
+          "12",
+          "A kód nem fordul le (fordítási hiba)"
+        ],
+        correctIndex: 3,
+        explanation: "A switch blokk egyetlen közös hatókört (scope) alkot, így az 'int j' változó többszöri deklarálása ugyanabban a blokkban fordítási hibát okoz."
+      },
+      {
+        id: 7,
+        question: "Mi a legpontosabb eredménye a következő kódrészlet futtatásának?",
+        code: `Integer[] someInts = new Integer[100];
+int sum = 0;
+for (Integer i : someInts) {
+    sum += i;
+}
+System.out.println(sum / someInts.length);`,
+        options: [
+          "0",
+          "100 egész szám összege",
+          "NullPointerException kivétel dobódik",
+          "A kód nem fordul le"
+        ],
+        correctIndex: 2,
+        explanation: "Az Integer[] tömb elemei alapértelmezetten null értékűek. A 'sum += i' során az automatikus unboxing (i.intValue()) NullPointerException-t vált ki."
+      },
+      {
+        id: 8,
+        question: "Mi lesz a következő kódrészlet kimenete?",
+        code: `char x = 'A';
+while (x != 'D') {
+    switch (x) {
+        case 'A':
+            System.out.println(x);
+            x = 'D';
+        case 'B':
+            System.out.println(x);
+            x = 'C';
+            break;
+        case 'C':
+            System.out.println(x);
+            x = 'D';
+            continue;
+        default:
+    }
+}`,
+        options: [
+          "A\nD\nC",
+          "A\nD\nC\nD",
+          "A\nD",
+          "A"
+        ],
+        correctIndex: 0,
+        explanation: "Az 'A' ágban nincs break: kiírja az 'A'-t, x='D' lesz, majd továbbcsúszik (fall-through) a 'B' ágba, ahol kiírja a 'D'-t, és x='C' lesz. A következő ciklusban a 'C' ág kiírja a 'C'-t, x='D' lesz, és a ciklus véget ér."
+      },
+      {
+        id: 9,
+        question: "Mik az érvényes operandusai az instanceof operátornak?",
+        code: null,
+        options: [
+          "Egy objektumreferencia (bal oldalon) és egy osztály/interfész típus (jobb oldalon)",
+          "Bármilyen primitív típus",
+          "Csak boolean típusok",
+          "Csak osztálytípusok mindkét oldalon"
+        ],
+        correctIndex: 0,
+        explanation: "Az instanceof bal oldalán egy objektumpéldány (referencia), jobb oldalán pedig egy osztály, absztrakt osztály vagy interfész neve áll."
+      },
+      {
+        id: 10,
+        question: "Egy olyan osztálynak, amely implementálja az ActionListener interfészt, melyik metódust kell megvalósítania?",
+        code: null,
+        options: [
+          "void handle(ActionEvent e)",
+          "void actionPerformed(ActionEvent e)",
+          "void eventDispatched(AWTEvent e)",
+          "String getActionCommand(ActionEvent e)"
+        ],
+        correctIndex: 1,
+        explanation: "Az ActionListener interfész egyetlen metódust ír elő: public void actionPerformed(ActionEvent e)."
+      },
+      {
+        id: 11,
+        question: "Adottak az alábbi osztály- és metódus-szignatúrák. A lentebbi kód nem fordul le. Miért?",
+        code: `public class A extends Exception { ... }
+public class B extends A { ... }
+public class C extends B { ... }
+public void doStuff() throws A, B, C
+
+try {
+    doStuff();
+} catch (A a) {
+    a.printStackTrace();
+} catch (B b) {
+    b.printStackTrace();
+} catch (C c) {
+    c.printStackTrace();
+} finally {
+    System.out.println("I love exceptions!");
+}`,
+        options: [
+          "A B és C típusú kivételek catch blokkjai elérhetetlenek (unreachable).",
+          "A finally blokk nem használható több catch blokkal együtt.",
+          "A B és C nem kivételosztályok, mert nem közvetlenül az Exception-ből származnak.",
+          "A finally blokk szintaktikailag hibás."
+        ],
+        correctIndex: 0,
+        explanation: "Mivel B és C az A leszármazottai, az első catch(A a) ág már elkapja őket is, így a specifikusabb catch blokkok elérhetetlenek (fordítási hiba)."
+      },
+      {
+        id: 12,
+        question: "Mi lesz a következő program kimenete?",
+        code: `public class A {
+    public static int doStuff(double x, double y) {
+        return (int) (x / y);
+    }
+    public static void main() {
+        float x = 6.0;
+        int y = 11;
+        x = A.doStuff(y, x);
+        System.out.print("x=" + x + ", y=" + y);
+    }
+}`,
+        options: [
+          "x=1, y=11",
+          "Ez a program nem fordul le",
+          "x=6.0, y=11",
+          "x=1.0, y=11"
+        ],
+        correctIndex: 1,
+        explanation: "A '6.0' literál double típusú, ezért nem adható értékül közvetlenül egy float változónak ('6.0f' kellene), ami fordítási hibát okoz."
+      },
+      {
+        id: 13,
+        question: "Mi lesz az eredménye a következő kódrészletnek egy olyan osztályon belül, ahol minden releváns kódrészlet látható?",
+        code: `private Date today;
+
+public void someMethod(String name, String favColor) {
+    System.out.println(name + "'s favorite color on "
+        + today.toString() + " is " + favColor);
+}
+// ... Valahol meghívják a someMethod-ot:
+String name = "Topato";
+String favColor = "Green";
+someMethod(favColor, name);`,
+        options: [
+          "Ez a kód nem fordul le",
+          "Green's favorite color on Tue Dec 12 10:27:00 EST 2006 is Topato",
+          "Topato's favorite color on Tue Dec 12 10:27:00 EST 2006 is Green",
+          "NullPointerException kivétel dobódik"
+        ],
+        correctIndex: 3,
+        explanation: "A 'today' példányváltozó nincs inicializálva, így az értéke null. A today.toString() meghívása NullPointerException kivételt eredményez."
+      },
+      {
+        id: 14,
+        question: "A következő kódrészlet lefutása után mik lesznek az x, y és z változók értékei?",
+        code: `int x, y, z;
+y = 1;
+z = 5;
+x = 0 - (++y) + z++;`,
+        options: [
+          "x = 4, y = 2, z = 6",
+          "x = 4, y = 1, z = 5",
+          "x = 3, y = 2, z = 6",
+          "x = -7, y = 1, z = 5"
+        ],
+        correctIndex: 2,
+        explanation: "A ++y előbb növeli y-t 2-re, a z++ pedig a régi 5-ös értéket használja, majd utána növeli z-t 6-ra. Így x = 0 - 2 + 5 = 3."
+      },
+      {
+        id: 15,
+        question: "Egy kétdimenziós tömböt így hozunk létre: float[][] ArrayOne = new float[20][10]; Ha átadjuk egy metódusnak, amelyben a paraméter neve someArray, hogyan néz ki a paraméter deklarációja?",
+        code: null,
+        options: [
+          "float[][] someArray",
+          "float someArray[]",
+          "float[] someArray[20]",
+          "float someArray[20][10]"
+        ],
+        correctIndex: 0,
+        explanation: "Javában a metódusparamétereknél nem szabad megadni a tömb dimenzióinak méretét, csak a típust és a szögletes zárójeleket: float[][] someArray."
+      },
+      {
+        id: 16,
+        question: "Adott egy Reindeer osztály. Az alábbi kód kivételt dob, amikor 9 Reindeer objektumot próbál fájlba írni. Miért?",
+        code: `class Reindeer { ... }
+
+File outFile = new File("Santa.txt");
+FileOutputStream outFileStream = new FileOutputStream(outFile);
+ObjectOutputStream outObjectStream = new ObjectOutputStream(outFileStream);
+Reindeer r;
+for (int i = 0; i < 9; i++) {
+    r = new Reindeer("Reindeer" + (i + 1));
+    outObjectStream.writeObject(r);
+}`,
+        options: [
+          "A Reindeer osztály nem implementálja a Serializable interfészt",
+          "Csak 8 Reindeer objektum íródik ki",
+          "A Santa.txt nem adatfájl, és csak adatfájlokba írhatunk objektumokat",
+          "ObjectOutputStream helyett DataOutputStream-et kellene használni"
+        ],
+        correctIndex: 0,
+        explanation: "Az ObjectOutputStream.writeObject() metódus NotSerializableException-t dob, ha az objektum osztálya nem implementálja a java.io.Serializable interfészt."
+      },
+      {
+        id: 17,
+        question: "Amikor FileOutputStream használatával írunk adatot egy fájlba, mikor íródik ki ténylegesen az adat?\nI. Közvetlenül a write() metódus meghívása után\nII. Amikor az adatpuffer megtelik\nIII. Amikor a close() metódust meghívják",
+        code: null,
+        options: [
+          "Csak I.",
+          "Csak III.",
+          "II. és III.",
+          "Csak II."
+        ],
+        correctIndex: 0,
+        explanation: "A sima FileOutputStream pufferelés nélküli (unbuffered) bájtfolyam, így a write() hívás azonnal átadja az adatot az operációs rendszernek."
+      },
+      {
+        id: 18,
+        question: "Miért deklarálunk egy osztályt absztraktként (abstract)?",
+        code: null,
+        options: [
+          "Mert logikailag nincs értelme közvetlenül példányosítani (csak általános alaposztályként szolgál)",
+          "Hogy interfészként lehessen használni",
+          "Hogy ne lehessen belőle örökölni",
+          "Mert nincsenek absztrakt metódusai"
+        ],
+        correctIndex: 0,
+        explanation: "Az absztrakt osztály olyan általános fogalmat ír le (pl. Állat, Alakzat), amelyből önmagában nem akarunk példányt létrehozni, csak a konkrét alosztályaiból."
+      },
+      {
+        id: 19,
+        question: "Melyik állítás igaz egy absztrakt metódusra, amelyet egy C osztály örököl?",
+        code: null,
+        options: [
+          "Definiálni (implementálni) kell a C osztályban, mielőtt a C példányosítható lenne",
+          "Egyik állítás sem igaz",
+          "Minden esetben absztrakttá kényszeríti a C osztályt",
+          "Felülír minden azonos nevű metódust a C osztályban"
+        ],
+        correctIndex: 0,
+        explanation: "Ha egy alosztály örököl egy absztrakt metódust, vagy meg kell valósítania azt, vagy magát az alosztályt is abstract-ként kell deklarálni."
+      },
+      {
+        id: 20,
+        question: "Az alábbi osztálydefiníció alapján mire következtethetünk?",
+        code: `public class B<T extends A> { ... }`,
+        options: [
+          "A T osztály kiterjeszti (extends) a B osztályt.",
+          "A B egy korlátozott paraméteres típus, amely csak A vagy annak alosztálya lehet.",
+          "A T egy korlátozott típusparaméter, amely csak A típusú vagy az A osztály alosztálya lehet.",
+          "A B osztály kiterjeszti (extends) az A osztályt."
+        ],
+        correctIndex: 2,
+        explanation: "A <T extends A> felső korlátos (bounded) típusparaméter azt jelenti, hogy a T helyére csak az A osztály vagy annak valamely leszármazottja helyettesíthető be."
+      },
+      {
+        id: 21,
+        question: "Tegyük fel, hogy az Undergraduate osztály kiterjeszti a Student osztályt, amely kiterjeszti a Person osztályt. Mely értékadások szabályosak?\nI. p = ug;\nII. p = new Undergraduate();\nIII. ug = new Student();\nIV. ug = p;\nV. s = new Person();",
+        code: `Person p = new Person();
+Student s = new Student();
+Undergraduate ug = new Undergraduate();`,
+        options: [
+          "III. és IV.",
+          "I. és IV.",
+          "I. és II.",
+          "II., III. és V."
+        ],
+        correctIndex: 2,
+        explanation: "Az alosztály példánya automatikusan (upcasting) értékül adható az ősosztály típusú változónak (I. és II.), fordítva viszont explicit cast nélkül nem."
+      },
+      {
+        id: 22,
+        question: "Adott az alábbi Bird és Chicken definíció. Melyik utasítás NEM fordul le?",
+        code: `abstract class Bird implements Livestock { }
+class Chicken extends Bird { }`,
+        options: [
+          "Bird bird = new Chicken();",
+          "Livestock livestock = new Chicken();",
+          "Bird bird = new Bird();",
+          "Egyik sem fordul le"
+        ],
+        correctIndex: 2,
+        explanation: "Mivel a Bird absztrakt osztály, nem lehet példányosítani a 'new Bird()' kifejezéssel."
+      },
+      {
+        id: 23,
+        question: "Mely állítások igazak a generikusok (generics) és paraméteres típusok használatára Javában?\nI. Típusbiztonságot nyújtanak azzal, hogy a típusellenőrzést a fordítóra bízzák.\nII. Megszüntetik a típuskényszerítés (downcast) szükségességét a kollekciók használatakor.\nIII. Saját kollekció (pl. láncolt lista) írásakor egyetlen osztálydefinícióval biztosítanak típusbiztonságot több külön osztály helyett.",
+        code: null,
+        options: [
+          "I. és II.",
+          "II. és III.",
+          "I., II. és III.",
+          "I. és III."
+        ],
+        correctIndex: 2,
+        explanation: "Mindhárom állítás a Java generikus típusrendszerének alapvető előnyeit fogalmazza meg."
+      },
+      {
+        id: 24,
+        question: "Milyen kapcsolat áll fenn az A osztály someMeth és a B osztály someMeth metódusa között?",
+        code: `class A {
+    private void someMeth() {
+        System.out.println("from class A");
+    }
+}
+class B extends A {
+    public void someMeth(String x) {
+        System.out.println("from class B: " + x);
+    }
+}`,
+        options: [
+          "Metódus-felüldefiniálás (method overriding)",
+          "Metódus-túlterhelés (method overloading)",
+          "Mindkettő (overriding és overloading is)",
+          "Sem felüldefiniálás, sem túlterhelés"
+        ],
+        correctIndex: 3,
+        explanation: "Az A osztály metódusa private, ezért a B osztály nem örökli és nem látja. Így sem felüldefiniálásról, sem túlterhelésről nem beszélhetünk."
+      },
+      {
+        id: 25,
+        question: "Melyik állítás igaz azokra a Vector objektumokra, amelyeknél nincs megadva paraméteres típus (nyers típus)?",
+        code: null,
+        options: [
+          "Ha nincs megadva paraméteres típus, a kód nem fordul le",
+          "Nincs szükség paraméteres típusra, mert a Java az Object osztályt használja típusként",
+          "Szükséges a típus megadása, mert a Java nem tudja, mennyi memóriát foglaljon",
+          "Nincs szükség típusra, mert a Vector alapértelmezetten String objektumokat tárol"
+        ],
+        correctIndex: 1,
+        explanation: "A visszafelé kompatibilitás miatt a nyers (raw) kollekciók megengedettek, és minden elemet Object referenciaként kezelnek."
+      },
+      {
+        id: 26,
+        question: "Adottak az alábbi definíciók. Mely értékadások szabályosak?\nI. Box<Object> b = new Box<String>();\nII. Box<String> b = new SuperBox<String>();\nIII. Box<Object> b = new SuperBox<String>();",
+        code: `class Box<T> { }
+class SuperBox<T> extends Box<T> { }`,
+        options: [
+          "I., II. és III.",
+          "Csak II.",
+          "Csak I. és III.",
+          "Csak I."
+        ],
+        correctIndex: 1,
+        explanation: "A Java generikusok invariánsak: a Box<String> nem altípusa a Box<Object>-nek. Viszont a SuperBox<String> altípusa a Box<String>-nek, így csak a II. szabályos."
+      },
+      {
+        id: 27,
+        question: "Az alábbi függvény alapján mennyi az f(8, 9) hívás visszatérési értéke?",
+        code: `private int f(int x, int y) {
+    if (x == 0) {
+        return y;
+    } else {
+        return f(x - 1, y + 1);
+    }
+}`,
+        options: [
+          "0",
+          "17",
+          "Ez a rekurzió valamilyen módon hibás.",
+          "72"
+        ],
+        correctIndex: 1,
+        explanation: "Minden lépésben x-et 1-gyel csökkenti, y-t pedig 1-gyel növeli, amíg x el nem éri a 0-t. Így kiszámítja az x + y összeget: 8 + 9 = 17."
+      },
+      {
+        id: 28,
+        question: "Az alábbi függvény alapján mennyi a g(3) hívás értéke?",
+        code: `private int g(int num) {
+    if (num <= 1) {
+        return 1;
+    } else {
+        return 3 * g(num - 1) + g(num - 2);
+    }
+}`,
+        options: [
+          "Ez a rekurzió valamilyen módon hibás.",
+          "43",
+          "4",
+          "13"
+        ],
+        correctIndex: 3,
+        explanation: "g(0)=1, g(1)=1. Ebből g(2) = 3*g(1) + g(0) = 3*1 + 1 = 4. Végül g(3) = 3*g(2) + g(1) = 3*4 + 1 = 13."
+      },
+      {
+        id: 29,
+        question: "Az alábbi függvények alapján mi lesz az f(1), f(2), f(3), f(4), ... sorozat?",
+        code: `int f(int num) {
+    if (num <= 2) return num;
+    else return num * g(num - 1);
+}
+int g(int num) {
+    if (num <= 2) return num;
+    else return (num - 1) * f(num + 1);
+}`,
+        options: [
+          "1, 2, 6, 24, ...",
+          "Ez a rekurzió valamilyen módon hibás (végtelen rekurzióba fut).",
+          "1, 2, 3, 6, ...",
+          "1, 2, 6, 16, ..."
+        ],
+        correctIndex: 1,
+        explanation: "f(4) meghívja a 4*g(3)-at, ami meghívja a 2*f(4)-et, ami újra meghívja f(4)-et — így StackOverflowError-hoz vezető végtelen rekurzió alakul ki."
+      },
+      {
+        id: 30,
+        question: "Mi lesz a printNums() metódus hívásának kimenete, ha a bemeneti fájl tartalma soronként: 15, 23, 21, 19?",
+        code: `public static void printNums() throws IOException {
+    int n;
+    String line = inFile.readLine();
+    if (line != null) {
+        n = Integer.valueOf(line).intValue();
+        outFile.print(n + " ");
+        printNums();
+        outFile.print(n + " ");
+    }
+}`,
+        options: [
+          "15 23 21 19 19 21 23 15",
+          "19 21 23 15 19 21 23 15",
+          "15 23 21 19",
+          "19 21 23 15"
+        ],
+        correctIndex: 0,
+        explanation: "A rekurzív hívás előtt kiírja a számokat beolvasási sorrendben (15 23 21 19), majd a hívási verem visszatekerésekor fordított sorrendben újra (19 21 23 15)."
+      }
+    ];
+
+    // =========================================================================
+    // 2. ADATBÁZIS: FOGALMAK ÉS DEFINÍCIÓK (8 DB)
+    // =========================================================================
+    const conceptCards = [
+      {
+        id: "c1",
+        tag: "OOP Alapelv",
+        term: "Egységbezárás (Encapsulation)",
+        question: "Definiáld röviden az egységbezárás fogalmát az objektumorientált programozásban!",
+        answer: "Az adatok (mezők) és az azokat kezelő metódusok egyetlen egységbe (osztályba) zárása, miközben a belső állapotot láthatósági módosítókkal (pl. private) védjük a közvetlen külső módosítástól."
+      },
+      {
+        id: "c2",
+        tag: "OOP Tervezés",
+        term: "Absztrakt osztály vs. Interfész",
+        question: "Mi a fő különbség egy absztrakt osztály és egy interfész között?",
+        answer: "Az absztrakt osztály tartalmazhat állapotot (példányváltozókat) és kész metódusokat is, és egy osztály csak egyből örökölhet. Az interfész viselkedési szerződést ír elő, és egy osztály több interfészt is implementálhat."
+      },
+      {
+        id: "c3",
+        tag: "Kivételkezelés",
+        term: "Checked vs. Unchecked kivételek",
+        question: "Miben különbözik a RuntimeException (unchecked) a többi ellenőrzött (checked) kivételtől?",
+        answer: "A RuntimeException és alosztályai futásidejű programozási hibákat jeleznek; a fordító nem kényszeríti ki a try-catch blokkot vagy a throws deklarációt, ellentétben az ellenőrzött kivételekkel (pl. IOException)."
+      },
+      {
+        id: "c4",
+        tag: "Generikusok",
+        term: "Korlátozott típusparaméter (<T extends A>)",
+        question: "Mit jelent a <T extends A> jelölés egy generikus osztálydefinícióban?",
+        answer: "Felső korlátos típusparaméter: a T helyére kizárólag az A osztály vagy annak valamely leszármazottja adható meg, így a kódon belül biztonságosan hívhatók az A osztály metódusai."
+      },
+      {
+        id: "c5",
+        tag: "Adatszerkezetek",
+        term: "Verem (Stack) és a LIFO elv",
+        question: "Mi az a Stack (verem) adatszerkezet, és hogyan működnek az alapműveletei?",
+        answer: "LIFO (Last-In, First-Out – utoljára be, először ki) elvű adatszerkezet. A push() a verem tetejére helyez egy elemet, a pop() eltávolítja és visszaadja a legfelsőt, a peek() pedig csak megtekinti azt."
+      },
+      {
+        id: "c6",
+        tag: "Fájlkezelés",
+        term: "Objektum szerializáció (Serializable)",
+        question: "Mi a feltétele annak, hogy egy saját osztály példányait ObjectOutputStream segítségével fájlba mentsük?",
+        answer: "Az osztálynak implementálnia kell a java.io.Serializable jelölőinterfészt (és minden nem-transient adattagjának is szerializálhatónak kell lennie), különben NotSerializableException dobódik."
+      },
+      {
+        id: "c7",
+        tag: "Algoritmusok",
+        term: "Rekurzió alapesete (Base Case)",
+        question: "Miért elengedhetetlen az alapeset (base case) egy rekurzív metódusban?",
+        answer: "Az alapeset az a leállási feltétel, amelynél a metódus már nem hívja meg önmagát. Enélkül végtelen rekurzió alakul ki, ami a hívási verem megteléséhez (StackOverflowError) vezet."
+      },
+      {
+        id: "c8",
+        tag: "Polimorfizmus",
+        term: "Dinamikus kötés (Dynamic Binding)",
+        question: "Hogyan működik a dinamikus kötés metódushíváskor Javában?",
+        answer: "Felüldefiniált (overridden) példánymetódusok esetén nem a referencia fordítási idejű típusa, hanem a memóriában ténylegesen létező objektum futásidejű típusa dönti el, melyik metódus fut le."
+      }
+    ];
+
+    // =========================================================================
+    // 3. ADATBÁZIS: KÓDKIEGÉSZÍTÉS ÉS HIBAKERESÉS (5 DB - PART II ALAPJÁN)
+    // =========================================================================
+    const codingTasks = [
+      {
+        id: "code1",
+        badge: "Kódkiegészítés • 1. feladat",
+        title: "GradesCount — Osztályzatok tárolása Vector-ban",
+        description: "A feladat szerint a 0–100 közötti jegyeket kategóriánként (A: 90–100, B: 80–89, stb.) Vector kollekcióban kell tárolni. Egészítsd ki a hiányzó generikus típust, a feltételt és a hozzáadást!",
+        explanation: "A Vector csak objektumokat (Integer) tárolhat, primitív int-et nem. A 90–100 közötti tartományhoz && (ÉS) operátor kell, a beszúráshoz pedig az add() metódus.",
+        slots: [
+          {
+            id: "c1_s1",
+            correct: "Integer",
+            options: ["int", "Integer", "String"]
+          },
+          {
+            id: "c1_s2",
+            correct: "grade >= 90 && grade <= 100",
+            options: ["grade > 90 && grade < 100", "grade >= 90 || grade <= 100", "grade >= 90 && grade <= 100"]
+          },
+          {
+            id: "c1_s3",
+            correct: "vecA.add(grade);",
+            options: ["vecA.push(grade);", "vecA.add(grade);", "vecA.put(grade);"]
+          }
+        ],
+        renderCode: (vals, states) => `Vector<${renderSelect("c1_s1", vals.c1_s1, states.c1_s1)}> vecA = new Vector<>();
+int grade = input.nextInt();
+
+while (grade != -1) {
+    if (${renderSelect("c1_s2", vals.c1_s2, states.c1_s2)}) {
+        ${renderSelect("c1_s3", vals.c1_s3, states.c1_s3)}
+    }
+    // ... B, C, D, F ágak ...
+    grade = input.nextInt();
+}`
+      },
+      {
+        id: "code2",
+        badge: "Hibakeresés • 2. feladat",
+        title: "SantasHelper — Fájlkezelés és String-összehasonlítás",
+        description: "Az alábbi kód beolvassa a List.txt fájlt, és kiírja az ajándékokat a ShoppingList.txt-be, de 3 tipikus Java hiba van benne. Javítsd ki őket a legördülő menükkel!",
+        explanation: "1) Javában a String tartalmát .equals()-szal hasonlítjuk össze (== referenciát vizsgál). 2) A PrintWriter-t le kell zárni (.close()), különben üres maradhat a fájl. 3) A fájlkezelési kivételt (FileNotFoundException) el kell kapni.",
+        slots: [
+          {
+            id: "c2_s1",
+            correct: "status.equals(\"Bad\")",
+            options: ["status == \"Bad\"", "status.equals(\"Bad\")", "status = \"Bad\""]
+          },
+          {
+            id: "c2_s2",
+            correct: "out.close();",
+            options: ["out.clear();", "out.close();", "in.delete();"]
+          },
+          {
+            id: "c2_s3",
+            correct: "catch (FileNotFoundException e)",
+            options: ["catch (ArithmeticException e)", "catch (FileNotFoundException e)", "catch (NullPointerException e)"]
+          }
+        ],
+        renderCode: (vals, states) => `try {
+    Scanner in = new Scanner(new File("List.txt"));
+    PrintWriter out = new PrintWriter("ShoppingList.txt");
+    while (in.hasNext()) {
+        String gender = in.next();
+        String first = in.next();
+        String last = in.next();
+        String status = in.next();
+        String toy = ${renderSelect("c2_s1", vals.c2_s1, states.c2_s1)} ? "Coal" : (gender.equals("F") ? "Pony" : "Bicycle");
+        out.println(last + ", " + first + " " + toy);
+    }
+    in.close();
+    ${renderSelect("c2_s2", vals.c2_s2, states.c2_s2)}
+} ${renderSelect("c2_s3", vals.c2_s3, states.c2_s3)} {
+    System.out.println("Hiba: A List.txt nem található!");
+}`
+      },
+      {
+        id: "code3",
+        badge: "Kódkiegészítés • 3. feladat",
+        title: "Animal, Goose és Flying — Absztrakt osztály és Interfész",
+        description: "Az Animal nem példányosítható közvetlenül. A Goose egyrészt Animal, másrészt képes repülni (Flying interfész), így Flying típusú változóban is tárolható. Egészítsd ki a szerkezetet!",
+        explanation: "Az abstract kulcsszó tiltja a közvetlen példányosítást. Egy osztály egyszerre örökölhet egy osztályból (extends Animal) és valósíthat meg interfészt (implements Flying).",
+        slots: [
+          {
+            id: "c3_s1",
+            correct: "abstract class Animal",
+            options: ["final class Animal", "abstract class Animal", "interface Animal"]
+          },
+          {
+            id: "c3_s2",
+            correct: "extends Animal implements Flying",
+            options: ["implements Animal extends Flying", "extends Animal, Flying", "extends Animal implements Flying"]
+          },
+          {
+            id: "c3_s3",
+            correct: "Flying",
+            options: ["Lynx", "Flying", "String"]
+          }
+        ],
+        renderCode: (vals, states) => `public interface Flying {
+    void fly();
+}
+
+public ${renderSelect("c3_s1", vals.c3_s1, states.c3_s1)} {
+    public void speak() { System.out.println("This animal speaks"); }
+}
+
+public class Goose ${renderSelect("c3_s2", vals.c3_s2, states.c3_s2)} {
+    @Override
+    public void fly() { System.out.println("A lúd repül!"); }
+}
+
+// Polimorf tárolás:
+${renderSelect("c3_s3", vals.c3_s3, states.c3_s3)} f = new Goose();`
+      },
+      {
+        id: "code4",
+        badge: "Kódkiegészítés • 4. feladat",
+        title: "Generikus Stack<T> — Láncolt verem műveletek",
+        description: "A Stack<T> osztály Node<T> csomópontok láncolatából épül fel, ahol a 'top' a verem tetejére mutat. Egészítsd ki a push() és pop() metódusok referenciaműveleteit!",
+        explanation: "Beszúráskor (push) az új csomópont next mutatója a régi top-ra mutat, majd top az új csomópont lesz. Kivételkor (pop) elmentjük top adatát, és top-ot a következő elemre léptetjük.",
+        slots: [
+          {
+            id: "c4_s1",
+            correct: "top = newNode;",
+            options: ["newNode = top;", "top = newNode;", "top.setNext(null);"]
+          },
+          {
+            id: "c4_s2",
+            correct: "top == null",
+            options: ["top != null", "top == null", "top.getData() == 0"]
+          },
+          {
+            id: "c4_s3",
+            correct: "top = top.getNext();",
+            options: ["top = top.getNext();", "top = null;", "return top;"]
+          }
+        ],
+        renderCode: (vals, states) => `public class Stack<T> {
+    private Node<T> top = null;
+
+    public void push(T item) {
+        Node<T> newNode = new Node<>(item, top);
+        ${renderSelect("c4_s1", vals.c4_s1, states.c4_s1)}
+    }
+
+    public T pop() {
+        if (${renderSelect("c4_s2", vals.c4_s2, states.c4_s2)}) return null;
+        T value = top.getData();
+        ${renderSelect("c4_s3", vals.c4_s3, states.c4_s3)}
+        return value;
+    }
+}`
+      },
+      {
+        id: "code5",
+        badge: "Hibakeresés & Kiegészítés • 5. feladat",
+        title: "Rekurzív Palindrome — Szóközök és kis/nagybetűk kezelése",
+        description: "A palindróma-ellenőrző metódusnak figyelmen kívül kell hagynia a kis- és nagybetűket, valamint a szóközöket, és rekurzívan kell vizsgálnia a szöveget. Egészítsd ki!",
+        explanation: "Először kisbetűsítjük és eltávolítjuk a szóközöket. Ha a hossz <= 1, igaz (alapeset). Ha a két szélső karakter eltér, hamis, különben a középső részsztringre (1-től length-1-ig) hívjuk újra.",
+        slots: [
+          {
+            id: "c5_s1",
+            correct: "clean.length() <= 1",
+            options: ["clean.length() == 0", "clean.length() <= 1", "clean.length() > 1"]
+          },
+          {
+            id: "c5_s2",
+            correct: "clean.charAt(clean.length() - 1)",
+            options: ["clean.charAt(clean.length())", "clean.charAt(clean.length() - 1)", "clean.charAt(1)"]
+          },
+          {
+            id: "c5_s3",
+            correct: "isPalindrome(clean.substring(1, clean.length() - 1))",
+            options: ["isPalindrome(clean.substring(1))", "isPalindrome(clean.substring(0, clean.length() - 1))", "isPalindrome(clean.substring(1, clean.length() - 1))"]
+          }
+        ],
+        renderCode: (vals, states) => `public static boolean isPalindrome(String arg) {
+    String clean = arg.replaceAll("\\\\s+", "").toLowerCase();
+    if (${renderSelect("c5_s1", vals.c5_s1, states.c5_s1)}) {
+        return true;
+    }
+    if (clean.charAt(0) != ${renderSelect("c5_s2", vals.c5_s2, states.c5_s2)}) {
+        return false;
+    }
+    return ${renderSelect("c5_s3", vals.c5_s3, states.c5_s3)};
+}`
+      }
+    ];
+
+    // =========================================================================
+    // 4. ALKALMAZÁS ÁLLAPOT (STATE)
+    // =========================================================================
+    let state = {
+      activeTab: 'all',
+      mcqAnswers: {},       // { questionId: selectedOptionIndex }
+      revealedConcepts: {}, // { conceptId: boolean }
+      codingValues: {},     // { slotId: selectedString }
+      codingChecked: {}     // { taskId: boolean }
+    };
+
+    // =========================================================================
+    // 5. SEGÉDFÜGGVÉNYEK ÉS RENDERELÉS
+    // =========================================================================
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function renderSelect(slotId, selectedVal, statusClass) {
+      // Megkeressük a slot opcióit
+      let slotObj = null;
+      for (const task of codingTasks) {
+        const found = task.slots.find(s => s.id === slotId);
+        if (found) {
+          slotObj = found;
+          break;
+        }
+      }
+      const cls = statusClass ? `code-select ${statusClass}` : 'code-select';
+      let optsHtml = `<option value="">-- válassz --</option>`;
+      if (slotObj) {
+        slotObj.options.forEach(opt => {
+          const isSel = selectedVal === opt ? 'selected' : '';
+          optsHtml += `<option value="${opt.replace(/"/g, '&quot;')}" ${isSel}>${escapeHtml(opt)}</option>`;
+        });
+      }
+      return `<select id="${slotId}" onchange="handleCodeSelect('${slotId}', this.value)" class="${cls}">${optsHtml}</select>`;
+    }
+
+    // Feleletválasztós kérdések renderelése
+    function renderMCQs() {
+      const container = document.getElementById('mcq-container');
+      const letters = ['A', 'B', 'C', 'D'];
+
+      container.innerHTML = mcqQuestions.map((q) => {
+        const userChoice = state.mcqAnswers[q.id];
+        const isAnswered = userChoice !== undefined;
+        const isCorrect = isAnswered && userChoice === q.correctIndex;
+
+        const optionsHtml = q.options.map((opt, idx) => {
+          let btnStyle = "bg-white hover:bg-sand/60 border-sand text-ink";
+          let badgeStyle = "bg-sand text-ink";
+          let statusIcon = "";
+
+          if (isAnswered) {
+            if (idx === q.correctIndex) {
+              btnStyle = "bg-sageLight border-sage text-sageDark font-semibold";
+              badgeStyle = "bg-sage text-white";
+              statusIcon = `<span class="ml-auto text-xs font-bold px-2 py-0.5 rounded bg-sage/20 text-sageDark">Helyes</span>`;
+            } else if (idx === userChoice) {
+              btnStyle = "bg-roseLight border-rose text-roseDark";
+              badgeStyle = "bg-rose text-white";
+              statusIcon = `<span class="ml-auto text-xs font-bold px-2 py-0.5 rounded bg-rose/20 text-roseDark">Hibás</span>`;
+            } else {
+              btnStyle = "bg-white/60 border-sand/70 text-muted opacity-75";
+            }
+          }
+
+          return `
+            <button
+              onclick="selectMCQ(${q.id}, ${idx})"
+              class="w-full min-h-[46px] text-left p-3 rounded-xl border transition-all flex items-center gap-3 active:scale-[0.99] ${btnStyle}"
+            >
+              <span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${badgeStyle}">
+                ${letters[idx]}
+              </span>
+              <span class="text-sm leading-snug whitespace-pre-line">${escapeHtml(opt)}</span>
+              ${statusIcon}
+            </button>
+          `;
+        }).join('');
+
+        return `
+          <article class="aztec-card p-4 sm:p-5 space-y-3.5" id="mcq-card-${q.id}">
+            <div class="flex items-start justify-between gap-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold bg-terracotta/15 text-terracottaDark">
+                ${q.id}. kérdés
+              </span>
+              ${isAnswered ? (
+                isCorrect
+                  ? `<span class="text-xs font-semibold text-sageDark">✓ +3 pont</span>`
+                  : `<span class="text-xs font-semibold text-roseDark">✕ 0 pont</span>`
+              ) : ''}
+            </div>
+
+            <p class="text-sm sm:text-base font-semibold text-ink leading-relaxed whitespace-pre-line">${escapeHtml(q.question)}</p>
+
+            ${q.code ? `<pre class="code-block"><code>${escapeHtml(q.code)}</code></pre>` : ''}
+
+            <div class="space-y-2 pt-1">
+              ${optionsHtml}
+            </div>
+
+            ${isAnswered ? `
+              <div class="mt-3 p-3.5 rounded-xl border ${isCorrect ? 'bg-sageLight/70 border-sage/40' : 'bg-ochreLight border-ochre/50'} text-xs sm:text-sm leading-relaxed">
+                <p class="font-bold text-ink mb-1">Magyarázat:</p>
+                <p class="text-ink/90">${escapeHtml(q.explanation)}</p>
+              </div>
+            ` : ''}
+          </article>
+        `;
+      }).join('');
+    }
+
+    // Fogalomkártyák renderelése
+    function renderConcepts() {
+      const container = document.getElementById('concepts-container');
+      container.innerHTML = conceptCards.map((c) => {
+        const revealed = !!state.revealedConcepts[c.id];
+        return `
+          <article class="aztec-card p-4 flex flex-col justify-between space-y-3">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-sage/20 text-sageDark">
+                  ${escapeHtml(c.tag)}
+                </span>
+              </div>
+              <h3 class="text-base font-bold text-ink">${escapeHtml(c.term)}</h3>
+              <p class="text-xs sm:text-sm text-muted leading-relaxed">${escapeHtml(c.question)}</p>
+            </div>
+
+            <div class="pt-2">
+              ${revealed ? `
+                <div class="p-3 rounded-xl bg-sageLight/80 border border-sage/40 text-xs sm:text-sm text-ink leading-relaxed space-y-2">
+                  <p>${escapeHtml(c.answer)}</p>
+                  <button
+                    onclick="toggleConcept('${c.id}')"
+                    class="text-xs font-semibold text-sageDark underline hover:no-underline"
+                  >
+                    Válasz elrejtése
+                  </button>
+                </div>
+              ` : `
+                <button
+                  onclick="toggleConcept('${c.id}')"
+                  class="w-full min-h-[44px] px-4 py-2 rounded-xl bg-sage text-white text-xs sm:text-sm font-semibold hover:bg-sageDark active:scale-[0.99] transition shadow-xs"
+                >
+                  Válasz megjelenítése
+                </button>
+              `}
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    // Kódkiegészítő / hibakereső feladatok renderelése
+    function renderCodingTasks() {
+      const container = document.getElementById('coding-container');
+      container.innerHTML = codingTasks.map((task) => {
+        const checked = !!state.codingChecked[task.id];
+        const states = {};
+        let allCorrect = true;
+
+        task.slots.forEach(slot => {
+          const val = state.codingValues[slot.id] || "";
+          if (checked) {
+            if (val === slot.correct) {
+              states[slot.id] = "correct";
+            } else {
+              states[slot.id] = "incorrect";
+              allCorrect = false;
+            }
+          } else {
+            states[slot.id] = "";
+            if (val !== slot.correct) allCorrect = false;
+          }
+        });
+
+        return `
+          <article class="aztec-card p-4 sm:p-5 space-y-3.5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-ochre/25 text-ink">
+                ${escapeHtml(task.badge)}
+              </span>
+              ${checked ? (
+                allCorrect
+                  ? `<span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-sageLight text-sageDark">✓ Tökéletes megoldás!</span>`
+                  : `<span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-roseLight text-roseDark">✕ Van még javítandó rész</span>`
+              ) : ''}
+            </div>
+
+            <h3 class="text-base sm:text-lg font-bold text-ink">${escapeHtml(task.title)}</h3>
+            <p class="text-xs sm:text-sm text-muted leading-relaxed">${escapeHtml(task.description)}</p>
+
+            <pre class="code-block"><code>${task.renderCode(state.codingValues, states)}</code></pre>
+
+            <div class="flex flex-wrap gap-2.5 pt-1">
+              <button
+                onclick="checkCodingTask('${task.id}')"
+                class="min-h-[44px] px-4 py-2 rounded-xl bg-terracotta hover:bg-terracottaDark text-white text-xs sm:text-sm font-semibold transition active:scale-[0.99]"
+              >
+                Ellenőrzés
+              </button>
+              <button
+                onclick="solveCodingTask('${task.id}')"
+                class="min-h-[44px] px-4 py-2 rounded-xl bg-sand hover:bg-sand/80 text-ink text-xs sm:text-sm font-semibold transition active:scale-[0.99]"
+              >
+                Megoldás kitöltése
+              </button>
+            </div>
+
+            ${checked ? `
+              <div class="p-3.5 rounded-xl bg-ochreLight border border-ochre/50 text-xs sm:text-sm leading-relaxed">
+                <p class="font-bold text-ink mb-1">Magyarázat:</p>
+                <p class="text-ink/90">${escapeHtml(task.explanation)}</p>
+              </div>
+            ` : ''}
+          </article>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // 6. ESEMÉNYKEZELŐK ÉS HALADÁSKÖVETÉS
+    // =========================================================================
+    function selectMCQ(questionId, optionIndex) {
+      state.mcqAnswers[questionId] = optionIndex;
+      renderMCQs();
+      updateProgress();
+    }
+
+    function toggleConcept(conceptId) {
+      state.revealedConcepts[conceptId] = !state.revealedConcepts[conceptId];
+      renderConcepts();
+      updateProgress();
+    }
+
+    function handleCodeSelect(slotId, value) {
+      state.codingValues[slotId] = value;
+      // Ha már ellenőrizve volt, frissítjük a vizuális állapotot
+      const parentTask = codingTasks.find(t => t.slots.some(s => s.id === slotId));
+      if (parentTask && state.codingChecked[parentTask.id]) {
+        renderCodingTasks();
+        updateProgress();
+      }
+    }
+
+    function checkCodingTask(taskId) {
+      state.codingChecked[taskId] = true;
+      renderCodingTasks();
+      updateProgress();
+    }
+
+    function solveCodingTask(taskId) {
+      const task = codingTasks.find(t => t.id === taskId);
+      if (!task) return;
+      task.slots.forEach(s => {
+        state.codingValues[s.id] = s.correct;
+      });
+      state.codingChecked[taskId] = true;
+      renderCodingTasks();
+      updateProgress();
+    }
+
+    function setActiveTab(tab) {
+      state.activeTab = tab;
+
+      // Fül gombok stílusának frissítése
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.dataset.tab === tab) {
+          btn.className = "tab-btn min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition bg-terracotta text-white shadow-sm";
+        } else {
+          btn.className = "tab-btn min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition bg-sand/70 text-ink hover:bg-sand";
+        }
+      });
+
+      // Szekciók láthatóságának állítása
+      const secMcq = document.getElementById('section-mcq');
+      const secConcepts = document.getElementById('section-concepts');
+      const secCoding = document.getElementById('section-coding');
+
+      secMcq.style.display = (tab === 'all' || tab === 'mcq') ? 'block' : 'none';
+      secConcepts.style.display = (tab === 'all' || tab === 'concepts') ? 'block' : 'none';
+      secCoding.style.display = (tab === 'all' || tab === 'coding') ? 'block' : 'none';
+    }
+
+    function updateProgress() {
+      let correctCount = 0;
+      let completedCount = 0;
+
+      // 1. Feleletválasztós eredmények
+      mcqQuestions.forEach(q => {
+        if (state.mcqAnswers[q.id] !== undefined) {
+          completedCount++;
+          if (state.mcqAnswers[q.id] === q.correctIndex) {
+            correctCount++;
+          }
+        }
+      });
+
+      // 2. Megnézett fogalmak
+      conceptCards.forEach(c => {
+        if (state.revealedConcepts[c.id]) {
+          completedCount++;
+          correctCount++;
+        }
+      });
+
+      // 3. Kódkiegészítő feladatok
+      codingTasks.forEach(t => {
+        if (state.codingChecked[t.id]) {
+          completedCount++;
+          const allOk = t.slots.every(s => state.codingValues[s.id] === s.correct);
+          if (allOk) correctCount++;
+        }
+      });
+
+      const totalItems = mcqQuestions.length + conceptCards.length + codingTasks.length;
+      const pct = Math.round((completedCount / totalItems) * 100);
+
+      document.getElementById('scoreValue').textContent = correctCount;
+      document.getElementById('answeredValue').textContent = completedCount;
+      document.getElementById('progressBar').style.width = `${pct}%`;
+    }
+
+    // Visszaállító modális ablak kezelése
+    function openResetModal() {
+      const modal = document.getElementById('resetModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeResetModal() {
+      const modal = document.getElementById('resetModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function confirmReset() {
+      state.mcqAnswers = {};
+      state.revealedConcepts = {};
+      state.codingValues = {};
+      state.codingChecked = {};
+      renderMCQs();
+      renderConcepts();
+      renderCodingTasks();
+      updateProgress();
+      closeResetModal();
+    }
+
+    // Kezdeti betöltés
+    window.addEventListener('DOMContentLoaded', () => {
+      renderMCQs();
+      renderConcepts();
+      renderCodingTasks();
+      updateProgress();
+    });
+  </script>
+</body>
+</html>
